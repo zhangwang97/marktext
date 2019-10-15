@@ -28,6 +28,7 @@
         :platform="platform"
       ></editor-with-tabs>
       <aidou></aidou>
+      <command-palette></command-palette>
       <about-dialog></about-dialog>
       <rename></rename>
       <tweet></tweet>
@@ -44,6 +45,7 @@ import TitleBar from '@/components/titleBar'
 import SideBar from '@/components/sideBar'
 import Aidou from '@/components/aidou/aidou'
 import AboutDialog from '@/components/about'
+import CommandPalette from '@/components/commandPalette'
 import Rename from '@/components/rename'
 import Tweet from '@/components/tweet'
 import ImportModal from '@/components/import'
@@ -63,7 +65,8 @@ export default {
     AboutDialog,
     Rename,
     Tweet,
-    ImportModal
+    ImportModal,
+    CommandPalette
   },
   mixins: [loadingPageMixins],
   data () {
@@ -110,6 +113,8 @@ export default {
 
     // store/index.js
     dispatch('LINTEN_WIN_STATUS')
+    // module: command center
+    dispatch('LISTEN_COMMAND_CENTER_BUS')
     // module: tweet
     dispatch('LISTEN_FOR_TWEET')
     // module: layout
@@ -129,6 +134,7 @@ export default {
     // module: editor
     dispatch('LISTEN_SCREEN_SHOT')
     dispatch('ASK_FOR_USER_PREFERENCE')
+    dispatch('LISTEN_TOGGLE_VIEW')
     dispatch('LISTEN_FOR_CLOSE')
     dispatch('LISTEN_FOR_SAVE_AS')
     dispatch('LISTEN_FOR_MOVE_TO')
@@ -139,12 +145,14 @@ export default {
     dispatch('LISTEN_FOR_EXPORT_PRINT')
     dispatch('LISTEN_FOR_RENAME')
     dispatch('LINTEN_FOR_SET_LINE_ENDING')
+    dispatch('LINTEN_FOR_SET_ENCODING')
     dispatch('LISTEN_FOR_NEW_TAB')
     dispatch('LISTEN_FOR_CLOSE_TAB')
     dispatch('LISTEN_FOR_TAB_CYCLE')
     dispatch('LINTEN_FOR_PRINT_SERVICE_CLEARUP')
     dispatch('LINTEN_FOR_EXPORT_SUCCESS')
     dispatch('LISTEN_FOR_FILE_CHANGE')
+    dispatch('LISTEN_WINDOW_ZOOM')
     // module: notification
     dispatch('LISTEN_FOR_NOTIFICATION')
 

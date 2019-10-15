@@ -7,6 +7,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, systemPreferences } fro
 import { isChildOfDirectory } from 'common/filesystem/paths'
 import { isLinux, isOsx } from '../config'
 import parseArgs from '../cli/parser'
+import { normalizeAndResolvePath } from '../filesystem'
 import { normalizeMarkdownPath } from '../filesystem/markdown'
 import { selectTheme } from '../menu/actions/theme'
 import { dockMenu } from '../menu/templates'
@@ -378,6 +379,21 @@ class App {
     pathsToOpen.length = 0
   }
 
+  _openSettingsWindow () {
+    const settingWins = this._windowManager.getWindowsByType(WindowType.SETTING)
+    if (settingWins.length >= 1) {
+      // A setting window is already created
+      const browserSettingWindow = settingWins[0].win.browserWindow
+      if (isLinux) {
+        browserSettingWindow.focus()
+      } else {
+        browserSettingWindow.moveTop()
+      }
+      return
+    }
+    this._createSettingWindow()
+  }
+
   _listenForIpcMain () {
     ipcMain.on('app-create-editor-window', () => {
       this._createEditorWindow()
@@ -412,18 +428,7 @@ class App {
     })
 
     ipcMain.on('app-create-settings-window', () => {
-      const settingWins = this._windowManager.getWindowsByType(WindowType.SETTING)
-      if (settingWins.length >= 1) {
-        // A setting window is already created
-        const browserSettingWindow = settingWins[0].win.browserWindow
-        if (isLinux) {
-          browserSettingWindow.focus()
-        } else {
-          browserSettingWindow.moveTop()
-        }
-        return
-      }
-      this._createSettingWindow()
+      this._openSettingsWindow()
     })
 
     ipcMain.on('app-open-file-by-id', (windowId, filePath) => {
@@ -478,6 +483,23 @@ class App {
 
     // --- renderer -------------------
 
+    ipcMain.on('mt::app-try-quit', () => {
+      app.quit()
+    })
+
+    ipcMain.on('mt::open-file-by-window-id', (e, windowId, filePath) => {
+      const resolvedPath = normalizeAndResolvePath(filePath)
+      const openFilesInNewWindow = this._accessor.preferences.getItem('openFilesInNewWindow')
+      if (openFilesInNewWindow) {
+        this._createEditorWindow(null, [resolvedPath])
+      } else {
+        const editor = this._windowManager.get(windowId)
+        if (editor) {
+          editor.openTab(resolvedPath, {}, true)
+        }
+      }
+    })
+
     ipcMain.on('mt::select-default-directory-to-open', async e => {
       const { preferences } = this._accessor
       const { defaultDirectoryToOpen } = preferences.getAll()
@@ -493,7 +515,19 @@ class App {
     })
 
     ipcMain.on('mt::open-setting-window', () => {
-      ipcMain.emit('app-create-settings-window')
+      this._openSettingsWindow()
+    })
+
+    ipcMain.on('mt::make-screenshot', e => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      ipcMain.emit('screen-capture', win)
+    })
+
+    ipcMain.on('mt::request-keybindings', e => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      const { keybindings } = this._accessor
+      // Convert map to object
+      win.webContents.send('mt::keybindings-response', Object.fromEntries(keybindings.keys))
     })
   }
 }

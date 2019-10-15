@@ -9,15 +9,19 @@ const getters = {}
 const mutations = {}
 
 const actions = {
-  LISTEN_FOR_EDIT ({ commit }) {
-    ipcRenderer.on('AGANI::edit', (e, { type }) => {
+  LISTEN_FOR_EDIT () {
+    ipcRenderer.on('mt::editor-edit-action', (e, { type }) => {
+      // TODO: Why emit the same value twice?
       bus.$emit(type, type)
     })
   },
 
   LISTEN_FOR_VIEW ({ commit }) {
-    ipcRenderer.on('AGANI::view', (e, data) => {
+    ipcRenderer.on('mt::editor-change-view', (e, data) => {
       commit('SET_MODE', data)
+    })
+    ipcRenderer.on('mt::show-command-palette', () => {
+      bus.$emit('show-command-palette')
     })
   },
 
@@ -27,11 +31,11 @@ const actions = {
     })
   },
 
-  LISTEN_FOR_PARAGRAPH_INLINE_STYLE ({ commit }) {
-    ipcRenderer.on('AGANI::paragraph', (e, { type }) => {
+  LISTEN_FOR_PARAGRAPH_INLINE_STYLE () {
+    ipcRenderer.on('mt::editor-paragraph-action', (e, { type }) => {
       bus.$emit('paragraph', type)
     })
-    ipcRenderer.on('AGANI::format', (e, { type }) => {
+    ipcRenderer.on('mt::editor-format-action', (e, { type }) => {
       bus.$emit('format', type)
     })
   }
